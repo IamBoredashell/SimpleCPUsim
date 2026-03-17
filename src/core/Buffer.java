@@ -1,10 +1,8 @@
 public class Buffer {
     private byte[] data;
-    private int size;
 
     // Constructor that creates a buffer of the specified size
     public Buffer(int size) {
-        this.size = size;
         this.data = new byte[size]; // Initialize the byte array with the given size
     }
     // Copy Constructor
@@ -15,7 +13,6 @@ public class Buffer {
 
     // Constructor that initializes the buffer with a given byte array
     public Buffer(byte[] data) {
-        this.size = data.length;
         this.data = data.clone();
     }
 
@@ -26,14 +23,33 @@ public class Buffer {
 
     // Set the data array
     public void setData(byte[] data) {
-        if (data.length == this.size) {
+        if (data.length == this.data.length) {
             this.data = data.clone();
         } else {
             System.out.println("Error: Data size does not match buffer size.");
         }
     }
 
+    // Set individual byte --TODO add test
+    public void setByte(byte data, int index) {
+        if (index >= 0 && index < this.data.length){
+            this.data[index]=data;
+       } else {
+            System.out.println("Error: Data index is out of bound");
+       }
+    }
+    public byte getByte(int index) {
+        if (index >= 0 && index < this.data.length){
+        return data[index];
+        }else{
+            System.out.println("Error: Data index is out of bound");
+        }
+        
+        return 0;
+    }
 
+
+    //Set inside bytes to zero
     public void setZero() {
         // Iterate over the data array and set each byte to zero
         for (int i = 0; i < data.length; i++) {
@@ -41,7 +57,7 @@ public class Buffer {
         }
     }
 
-
+    //Check if zero
     public boolean isZero() {
         // Iterate through the byte array and check if each byte is 0
         for (byte b : data) {
@@ -55,7 +71,7 @@ public class Buffer {
 
     // Get the size of the buffer
     public int getSize() {
-        return this.size;
+        return this.data.length;
     }
 
     // Print the buffer's content in hexadecimal format

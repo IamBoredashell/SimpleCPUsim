@@ -9,12 +9,14 @@ import java.util.HashMap;
 public class Memory{
     private HashMap<Long, Buffer> memory;
     private int bufferSize;
-
+    
     public Memory(int bufferSize) {
         this.memory = new HashMap<>();
         this.bufferSize = bufferSize;
     }
-
+    
+    //Read address from data location
+    //Return zero if zero
     public Buffer read(Long address){
         Buffer buffer = new Buffer(bufferSize);
         buffer.setZero();
@@ -22,9 +24,10 @@ public class Memory{
             return buffer;
         }
         return new Buffer(memory.get(address));
-
     }
 
+    //Write to data location 
+    //Stores only non zero values
     public void write(Long address, Buffer val) {
         if (val.isZero()) {
             memory.remove(address);
@@ -32,10 +35,9 @@ public class Memory{
         }
         memory.put(address, new Buffer(val));
         return;
-
     }
 
-
+    //Print all values inside the memory
     public void printMemory() {
         for (Long address : memory.keySet()){
             Buffer buffer = memory.get(address);

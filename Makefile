@@ -4,13 +4,13 @@ SRC := $(shell find src -name "*.java")
 OUT := target
 TEST := $(shell find test -name "*.java")
 #classpath (Java)
-CP := $(OUT)
+CP := $(OUT):src/libs/*
 #Make sure that make does not this these are files and are commands instead
 .PHONY: all run clean
 # Only writing make runs the first one
 all:
 	mkdir -p $(OUT)
-	javac -d $(OUT) $(SRC)
+	javac -cp $(CP) -d $(OUT) $(SRC)
 
 run:
 	java -cp $(CP) Main
@@ -25,9 +25,10 @@ clean:
 # Loop is hardcoded so add class if need to run that test
 test: all
 	@echo "Compiling test classes..."
-	javac -cp $(OUT) -d $(OUT) $(TEST)
+	# javac -cp $(OUT) -d $(OUT) $(TEST)
+	javac -cp $(CP) -d $(OUT) $(TEST)
 	@echo "Running all test classes..."
-	@for cls in BufferTest MemoryTest; do \
+	@for cls in BufferTest MemoryTest TestYaml RegisterTest; do \
 		echo "Running $$cls..."; \
 		java -cp $(CP) $$cls; \
 	done
