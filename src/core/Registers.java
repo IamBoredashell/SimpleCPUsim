@@ -1,5 +1,3 @@
-//TODO Set an array (Non dynamic) map pair register name and a buffer , mapped according to order of reading can use both the name or int value to find correct
-//Set move instructions/ update byte instructions
 import java.util.HashMap;
 
 public class Registers {

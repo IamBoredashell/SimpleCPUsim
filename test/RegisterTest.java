@@ -52,6 +52,6 @@ public class RegisterTest {
         System.out.println("\n===== INVALID TRANSFER TEST =====");
         regs.transfer("R1", 0, "R2", 7, 5); // should trigger bounds error
 
-        System.out.println("\n===== TEST COMPLETE =====");
+        System.out.println("\n===== TEST COMPLETE =====\n");
     }
 }

@@ -30,7 +30,6 @@ public class Buffer {
         }
     }
 
-    // Set individual byte --TODO add test
     public void setByte(byte data, int index) {
         if (index >= 0 && index < this.data.length){
             this.data[index]=data;
