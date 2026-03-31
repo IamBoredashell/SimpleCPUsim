@@ -1,0 +1,6 @@
+control_unit_size: 256
+microcode:
+  0x01:
+    - type: NOP
+  0x02:
+    - type: NOP

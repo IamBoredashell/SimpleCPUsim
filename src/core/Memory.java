@@ -1,48 +1,75 @@
-import java.util.HashMap; 
+import java.util.HashMap;
 
-// long a = 0xFFFFL;                // 65535
-// long b = 0xFFFFFFFFFFFFFFFFL;    // -1 (because long is signed)
-// long c = 0x7FFFFFFFFFFFFFFFL;    // Long.MAX_VALUE
-// long d = 0x8000000000000000L;    // Long.MIN_VALUE
+public class Memory {
+    private HashMap<Buffer, Buffer> memory;
+    private int dataBufferSize;
+    private int addressBufferSize;
 
-
-public class Memory{
-    private HashMap<Long, Buffer> memory;
-    private int bufferSize;
-    
-    public Memory(int bufferSize) {
+    public Memory(int addressBufferSize, int dataBufferSize) {
         this.memory = new HashMap<>();
-        this.bufferSize = bufferSize;
-    }
-    
-    //Read address from data location
-    //Return zero if zero
-    public Buffer read(Long address){
-        Buffer buffer = new Buffer(bufferSize);
-        buffer.setZero();
-        if(!memory.containsKey(address)){
-            return buffer;
-        }
-        return new Buffer(memory.get(address));
+        this.addressBufferSize = addressBufferSize;
+        this.dataBufferSize = dataBufferSize;
     }
 
-    //Write to data location 
-    //Stores only non zero values
-    public void write(Long address, Buffer val) {
+    // Copy constructor
+    public Memory(Memory other) {
+        this.dataBufferSize = other.dataBufferSize;
+        this.addressBufferSize = other.addressBufferSize;
+        this.memory = new HashMap<>();
+        for (Buffer key : other.memory.keySet()) {
+            this.memory.put(new Buffer(key), new Buffer(other.memory.get(key)));
+        }
+    }
+
+    // Read from memory at a buffer address
+    public Buffer read(Buffer address) {
+        if (address.getSize() != addressBufferSize) {
+            throw new RuntimeException("Invalid address buffer size");
+        }
+
+        Buffer zero = new Buffer(dataBufferSize);
+        zero.setZero();
+
+        Buffer data = memory.get(address);
+        if (data == null) return zero;
+
+        return new Buffer(data); // return a copy
+    }
+
+    // Write to memory at a buffer address
+    public void write(Buffer address, Buffer val) {
+        if (address.getSize() != addressBufferSize) {
+            throw new RuntimeException("Invalid address buffer size");
+        }
+        if (val.getSize() != dataBufferSize) {
+            throw new RuntimeException("Invalid data buffer size");
+        }
+
         if (val.isZero()) {
             memory.remove(address);
             return;
         }
-        memory.put(address, new Buffer(val));
-        return;
+
+        // Copy both key and value to prevent mutating key later
+        memory.put(new Buffer(address), new Buffer(val));
     }
 
-    //Print all values inside the memory
+    // Print all memory contents
     public void printMemory() {
-        for (Long address : memory.keySet()){
-            Buffer buffer = memory.get(address);
-            System.out.print("Address: " + address + " -> Data: ");
-            buffer.print(); 
+        for (Buffer addr : memory.keySet()) {
+            System.out.print("Address: ");
+            addr.print();
+            System.out.print(" -> Data: ");
+            memory.get(addr).print();
         }
+    }
+
+    // Optional getters
+    public int getDataBufferSize() {
+        return dataBufferSize;
+    }
+
+    public int getAddressBufferSize() {
+        return addressBufferSize;
     }
 }

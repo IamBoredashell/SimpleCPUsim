@@ -1,0 +1,28 @@
+control_unit_size: 2
+
+microcode:
+  "0x00":
+    - type: NOP
+
+  "0x01":
+    - type: LoadRegFromMem
+      reg: R1
+      addrRegs: [MAR]
+
+  "0x02":
+    - type: StoreRegToMem
+      reg: R1
+      addrRegs: [MAR]
+
+  "0x03":
+    - type: LoadRegFromMem
+      reg: R2
+      addrRegs: [MAR]
+
+  "0x04":
+    - type: StoreRegToMem
+      reg: R2
+      addrRegs: [MAR]
+
+  "0x05":
+    - type: NOP

@@ -6,7 +6,15 @@ public class Registers {
     public Registers() {
         this.registers = new HashMap<>();
     }
-
+    // Copy constructor (deep copy of registers)
+    public Registers(Registers other) {
+        this.registers = new HashMap<>();  // Initialize a new HashMap
+        // Iterate over the keys of the original 'registers' HashMap
+        for (String key : other.registers.keySet()) {
+            // For each key, get the corresponding Buffer and create a new Buffer
+            this.registers.put(key, new Buffer(other.registers.get(key)));  // Assuming Buffer has a copy constructor
+        }
+    }
     // Add register with custom size
     public void addReg(String name, int size) {
         registers.put(name, new Buffer(size));

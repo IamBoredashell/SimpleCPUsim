@@ -1,3 +1,4 @@
+import java.util.Arrays;
 public class Buffer {
     private byte[] data;
 
@@ -79,6 +80,20 @@ public class Buffer {
             System.out.printf("%02X ", b);
         }
         System.out.println();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Buffer other = (Buffer) obj;
+        return Arrays.equals(this.data, other.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(this.data);
     }
 }
 

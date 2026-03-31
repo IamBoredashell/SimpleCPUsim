@@ -1,0 +1,5 @@
+registers:
+  - name: PC
+    size: 1
+  - name: A
+    size: 1

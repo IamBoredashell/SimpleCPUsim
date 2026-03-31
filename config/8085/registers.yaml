@@ -1,0 +1,7 @@
+registers:
+  - name: R1
+    size: 8
+  - name: R2
+    size: 16
+  - name: ACC
+    size: 32

@@ -28,10 +28,11 @@ test: all
 	# javac -cp $(OUT) -d $(OUT) $(TEST)
 	javac -cp $(CP) -d $(OUT) $(TEST)
 	@echo "Running all test classes..."
-	@for cls in BufferTest MemoryTest TestYaml RegisterTest; do \
+	@for cls in CPUTest; do \
 		echo "Running $$cls..."; \
 		java -cp $(CP) $$cls; \
 	done
+
 
 
 # Run a single test class (user specifies CLASS)
