@@ -1,7 +1,7 @@
 import org.yaml.snakeyaml.Yaml;
 import java.util.Map;
 
-public class TestYaml {
+public class YamlTest {
     public static void main(String[] args) {
         System.out.println("\n===== YAML LIB LOAD =====");
         String data = "\nYaml Test: Library snakeyaml\n Version:2.3\n";

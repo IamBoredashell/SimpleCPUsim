@@ -1,75 +1,57 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class Memory {
-    private HashMap<Buffer, Buffer> memory;
-    private int dataBufferSize;
-    private int addressBufferSize;
+    private Map<Buffer, Buffer> memory;
 
-    public Memory(int addressBufferSize, int dataBufferSize) {
+    public Memory() {
         this.memory = new HashMap<>();
-        this.addressBufferSize = addressBufferSize;
-        this.dataBufferSize = dataBufferSize;
     }
 
-    // Copy constructor
-    public Memory(Memory other) {
-        this.dataBufferSize = other.dataBufferSize;
-        this.addressBufferSize = other.addressBufferSize;
-        this.memory = new HashMap<>();
-        for (Buffer key : other.memory.keySet()) {
-            this.memory.put(new Buffer(key), new Buffer(other.memory.get(key)));
+    public void write(Buffer address, Buffer data) {
+        if (address == null) {
+            throw new IllegalArgumentException("Address cannot be null");
         }
+        if (data == null) {
+            throw new IllegalArgumentException("Data cannot be null");
+        }
+
+        // store copies to avoid external mutation
+        memory.put(new Buffer(address), new Buffer(data));
     }
 
-    // Read from memory at a buffer address
     public Buffer read(Buffer address) {
-        if (address.getSize() != addressBufferSize) {
-            throw new RuntimeException("Invalid address buffer size");
+        if (address == null) {
+            throw new IllegalArgumentException("Address cannot be null");
         }
-
-        Buffer zero = new Buffer(dataBufferSize);
-        zero.setZero();
 
         Buffer data = memory.get(address);
-        if (data == null) return zero;
 
-        return new Buffer(data); // return a copy
+        if (data == null) {
+            throw new RuntimeException("Memory read error: no data at given address");
+        }
+
+        // return copy to avoid mutation outside
+        return new Buffer(data);
     }
 
-    // Write to memory at a buffer address
-    public void write(Buffer address, Buffer val) {
-        if (address.getSize() != addressBufferSize) {
-            throw new RuntimeException("Invalid address buffer size");
+    public boolean contains(Buffer address) {
+        if (address == null) {
+            throw new IllegalArgumentException("Address cannot be null");
         }
-        if (val.getSize() != dataBufferSize) {
-            throw new RuntimeException("Invalid data buffer size");
-        }
-
-        if (val.isZero()) {
-            memory.remove(address);
-            return;
-        }
-
-        // Copy both key and value to prevent mutating key later
-        memory.put(new Buffer(address), new Buffer(val));
+        return memory.containsKey(address);
     }
 
-    // Print all memory contents
-    public void printMemory() {
-        for (Buffer addr : memory.keySet()) {
+    public void clear() {
+        memory.clear();
+    }
+
+    public void print() {
+        for (Map.Entry<Buffer, Buffer> entry : memory.entrySet()) {
             System.out.print("Address: ");
-            addr.print();
+            entry.getKey().print();
             System.out.print(" -> Data: ");
-            memory.get(addr).print();
+            entry.getValue().print();
         }
-    }
-
-    // Optional getters
-    public int getDataBufferSize() {
-        return dataBufferSize;
-    }
-
-    public int getAddressBufferSize() {
-        return addressBufferSize;
     }
 }

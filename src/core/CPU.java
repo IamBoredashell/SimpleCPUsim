@@ -1,70 +1,79 @@
 import java.math.BigInteger;
 
-enum Endianness{
+enum Endianness {
     LITTLE,
     BIG
 }
 
 public class CPU {
-    public Registers reg;       // all CPU registers
-    public Memory memory;       // memory
-    public ControlUnit cu;      // microcode execution unit
-    public Endianness endianness;
-    private BigInteger iteration;  // tracks number of micro-op executions
-    private boolean running;       // CPU running status
+
+    public Registers reg;
+    public Memory memory;
+    public ControlUnit cu;
+
+    private Endianness endianness;
+    private BigInteger iteration;
+    private boolean running;
 
     public CPU(Memory memory, Registers reg, ControlUnit cu, Endianness endianness) {
+        if (memory == null || reg == null || cu == null || endianness == null) {
+            throw new IllegalArgumentException("CPU components cannot be null");
+        }
+
         this.memory = memory;
         this.reg = reg;
         this.cu = cu;
+        this.endianness = endianness;
+
         this.iteration = BigInteger.ZERO;
         this.running = false;
-        this.endianness = endianness;
     }
+
     public void setEndianness(Endianness e) {
+        if (e == null) {
+            throw new IllegalArgumentException("Endianness cannot be null");
+        }
         this.endianness = e;
     }
-    /** Step once: let CU dynamically fetch/decode/execute using specified PC/MAR register */
-    public void step(String pcRegName) {
+
+    /** Execute ONE micro-op */
+    public void step() {
         if (!running) {
-            System.out.println("CPU not running. Call start() first.");
             return;
         }
-        while (isRunning()) {
-            cu.step(this, "IR");
-        }
+
+        cu.step(this, "IR");
         iteration = iteration.add(BigInteger.ONE);
     }
 
-    /** Run n steps */
-    public void run(String pcRegName, int n) {
+    /** Run continuously */
+    public void run() {
         start();
-        for (int i = 0; i < n; i++) {
-            step(pcRegName);
-            if (!running) break; // CU may have halted
+
+        while (running) {
+            step();
         }
     }
 
-    /** Start CPU execution */
+    /** Start CPU (no execution loop inside) */
     public void start() {
         running = true;
     }
 
-    /** Stop CPU execution */
+    /** Stop CPU */
     public void stop() {
         running = false;
     }
 
-    /** Get iteration count */
+    public boolean isRunning() {
+        return running;
+    }
+
     public BigInteger getIteration() {
         return iteration;
     }
 
-    public Endianness getEndianness(){
+    public Endianness getEndianness() {
         return endianness;
-    }
-    /** Get CPU running state */
-    public boolean isRunning() {
-        return running;
     }
 }

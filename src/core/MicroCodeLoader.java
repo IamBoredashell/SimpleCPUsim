@@ -1,62 +1,103 @@
 import org.yaml.snakeyaml.Yaml;
+
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class MicroCodeLoader {
 
-private static Buffer parseKey(Object keyObj) {
-
-    // case: list like [0x80, 0x28]
-    if (keyObj instanceof List) {
-        List<?> list = (List<?>) keyObj;
-
-        byte[] arr = new byte[list.size()];
-        for (int i = 0; i < list.size(); i++) {
-            arr[i] = parseAny(list.get(i));
-        }
-        return new Buffer(arr);
-    }
-
-        // case: single value like 0x80
-        return new Buffer(new byte[]{ parseAny(keyObj) });
-    }
-
-    private static byte parseAny(Object obj) {
-        if (obj instanceof Number) {
-            return ((Number) obj).byteValue();  // ✅ handles YAML ints correctly
-        }
-
-        String s = obj.toString().trim().toLowerCase();
-
-        if (s.startsWith("0x")) {
-            return (byte) Integer.parseInt(s.substring(2), 16);
-        }
-
-        return (byte) Integer.parseInt(s);
-    }
-
     public static void load(String filePath, ControlUnit cu) {
-        try (InputStream in = java.nio.file.Files.newInputStream(java.nio.file.Paths.get(filePath))) {
+        if (filePath == null || cu == null) {
+            throw new IllegalArgumentException("File path and ControlUnit cannot be null");
+        }
 
+        try {
             Yaml yaml = new Yaml();
-            Map<String, Object> data = yaml.load(in);
+            InputStream input = Files.newInputStream(Paths.get(filePath));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = yaml.load(input);
 
-            Map<Object, Object> microcode =
-                    (Map<Object, Object>) data.get("microcode");
+            if (data == null || !data.containsKey("microcode")) {
+                throw new RuntimeException("Missing 'microcode' section in YAML");
+            }
+
+            // ✅ Safe cast with check
+            Object mcObj = data.get("microcode");
+            if (!(mcObj instanceof Map)) {
+                throw new RuntimeException("'microcode' must be a map");
+            }
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> microcode = (Map<Object, Object>) mcObj;
 
             for (Map.Entry<Object, Object> entry : microcode.entrySet()) {
 
-                Buffer key = parseKey(entry.getKey());
-                List<Map<String, Object>> opsList =
-                        (List<Map<String, Object>>) entry.getValue();
+                Buffer instruction = parseInstruction(entry.getKey());
 
-                List<MicroOp> ops = new ArrayList<>();
-
-                for (Map<String, Object> opMap : opsList) {
-                    ops.add(parseOp(opMap));
+                // ✅ Safe cast for micro-ops list
+                Object opsObj = entry.getValue();
+                if (!(opsObj instanceof List)) {
+                    throw new RuntimeException("MicroOps must be a list");
                 }
-                System.out.println("Loaded key size: " + key.getSize());
-                cu.register(key, ops);
+
+                List<?> rawOps = (List<?>) opsObj;
+                if (rawOps.isEmpty()) {
+                    throw new RuntimeException("Empty micro-op list for instruction");
+                }
+
+                List<MicroOp> microOps = new ArrayList<>();
+
+                for (Object obj : rawOps) {
+
+                    if (!(obj instanceof Map)) {
+                        throw new RuntimeException("Invalid micro-op entry format");
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> opMap = (Map<String, Object>) obj;
+
+                    String type = (String) opMap.get("type");
+                    if (type == null) {
+                        throw new RuntimeException("MicroOp missing 'type'");
+                    }
+
+                    switch (type) {
+
+                        case "FetchNext":
+                            microOps.add(new FetchNext(
+                                    (String) opMap.get("pc"),
+                                    (String) opMap.get("ir")
+                            ));
+                            break;
+
+                        case "IncReg":
+                            microOps.add(new IncReg(
+                                    (String) opMap.get("reg")
+                            ));
+                            break;
+
+                        case "DecReg":
+                            microOps.add(new DecReg(
+                                    (String) opMap.get("reg")
+                            ));
+                            break;
+
+                        case "ClearIR":
+                            microOps.add(new ClearIR(
+                                    (String) opMap.get("ir")
+                            ));
+                            break;
+
+                        case "End":
+                            microOps.add(new End());
+                            break;
+
+                        default:
+                            throw new RuntimeException("Unknown MicroOp: " + type);
+                    }
+                }
+
+                cu.register(instruction, microOps);
             }
 
         } catch (Exception e) {
@@ -64,79 +105,45 @@ private static Buffer parseKey(Object keyObj) {
         }
     }
 
-    // --- parse instruction key ---
+    private static Buffer parseInstruction(Object key) {
 
-    private static Buffer parseInstruction(String keyStr) {
-        keyStr = keyStr.trim();
-
-        // handle empty IR: []
-        if (keyStr.equals("[]")) {
-            return new Buffer(0);
+        if (key == null) {
+            throw new RuntimeException("Instruction key cannot be null");
         }
 
-        List<Byte> bytes = new ArrayList<>();
+        // List case: [0x80, 0x50]
+        if (key instanceof List) {
+            List<?> list = (List<?>) key;
 
-        if (keyStr.startsWith("[") && keyStr.endsWith("]")) {
-            String inner = keyStr.substring(1, keyStr.length() - 1).trim();
+            byte[] data = new byte[list.size()];
 
-            if (!inner.isEmpty()) {
-                String[] parts = inner.split(",");
-                for (String p : parts) {
-                    bytes.add(parseByte(p));
-                }
+            for (int i = 0; i < list.size(); i++) {
+                data[i] = parseByte(list.get(i));
             }
-        } else {
-            bytes.add(parseByte(keyStr));
+
+            return new Buffer(data);
         }
 
-        byte[] arr = new byte[bytes.size()];
-        for (int i = 0; i < bytes.size(); i++) arr[i] = bytes.get(i);
-
-        return new Buffer(arr);
+        // Single byte case: 0x80
+        return new Buffer(new byte[]{parseByte(key)});
     }
 
-    // --- parse micro-op ---
-    private static MicroOp parseOp(Map<String, Object> op) {
-        String type = (String) op.get("type");
+    private static byte parseByte(Object obj) {
 
-        switch (type) {
-            case "NOP":
-                return new NOP();
-
-            case "IncReg":
-                return new IncReg((String) op.get("reg"));
-
-            case "DecReg":
-                return new DecReg((String) op.get("reg"));
-
-            case "FetchNext":
-                return new FetchNext(
-                        (String) op.get("pc"),
-                        (String) op.get("ir")
-                );
-
-            case "ShiftIRLeft":
-                return new ShiftIRLeft(
-                        (String) op.get("ir"),
-                        (Integer) op.get("count")
-                );
-
-            case "ClearIR":
-                return new ClearIR(
-                        (String) op.get("ir")
-                );
-
-            case "End":
-                return new End();
-
-            default:
-                throw new RuntimeException("Unknown MicroOp: " + type);
+        if (obj == null) {
+            throw new RuntimeException("Invalid byte value: null");
         }
-    }
 
-    private static byte parseByte(String s) {
-        s = s.trim().toLowerCase();
-        if (s.startsWith("0x")) s = s.substring(2);
-        return (byte) Integer.parseInt(s, 16);
+        String s = obj.toString().trim();
+
+        if (s.isEmpty()) {
+            throw new RuntimeException("Invalid byte value: empty string");
+        }
+
+        if (s.startsWith("0x") || s.startsWith("0X")) {
+            return (byte) Integer.parseInt(s.substring(2), 16);
+        }
+
+        return (byte) Integer.parseInt(s);
     }
 }

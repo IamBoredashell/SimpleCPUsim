@@ -24,8 +24,8 @@ microcode:
     - type: ClearIR
       ir: IR
 
-  # HALT (single byte)
+  # HALT
   0xFF:
-  - type: ClearIR
-    ir: IR
-  - type: End
+    - type: ClearIR
+      ir: IR
+    - type: End

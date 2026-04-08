@@ -28,7 +28,7 @@ test: all
 	# javac -cp $(OUT) -d $(OUT) $(TEST)
 	javac -cp $(CP) -d $(OUT) $(TEST)
 	@echo "Running all test classes..."
-	@for cls in CPUTest; do \
+	@for cls in BufferTest MemoryTest YamlTest RegistersTest MicroOpTest ControlUnitTest CPUTest; do \
 		echo "Running $$cls..."; \
 		java -cp $(CP) $$cls; \
 	done

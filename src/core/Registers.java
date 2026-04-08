@@ -1,90 +1,94 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class Registers {
-    private HashMap<String, Buffer> registers;
+    private Map<String, Buffer> regs;
 
     public Registers() {
-        this.registers = new HashMap<>();
+        this.regs = new HashMap<>();
     }
-    // Copy constructor (deep copy of registers)
-    public Registers(Registers other) {
-        this.registers = new HashMap<>();  // Initialize a new HashMap
-        // Iterate over the keys of the original 'registers' HashMap
-        for (String key : other.registers.keySet()) {
-            // For each key, get the corresponding Buffer and create a new Buffer
-            this.registers.put(key, new Buffer(other.registers.get(key)));  // Assuming Buffer has a copy constructor
-        }
-    }
-    // Add register with custom size
+
     public void addReg(String name, int size) {
-        registers.put(name, new Buffer(size));
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Register name cannot be null or empty");
+        }
+        if (size < 0) {
+            throw new IllegalArgumentException("Register size cannot be negative");
+        }
+        if (regs.containsKey(name)) {
+            throw new RuntimeException("Register already exists: " + name);
+        }
+
+        regs.put(name, new Buffer(size));
     }
 
-    // Delete register
-    public void delReg(String name) {
-        registers.remove(name);
-    }
-
-    // Read (returns copy)
     public Buffer read(String name) {
-        if (!registers.containsKey(name)) {
-            System.out.println("Register not found: " + name);
-            return null;
+        Buffer b = regs.get(name);
+        if (b == null) {
+            throw new RuntimeException("Register not found: " + name);
         }
-        return new Buffer(registers.get(name));
+        return new Buffer(b); // return copy
     }
 
-    // Write full register
     public void write(String name, Buffer value) {
-        if (!registers.containsKey(name)) {
-            System.out.println("Register not found: " + name);
-            return;
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot write null buffer to register");
         }
-        registers.put(name, new Buffer(value));
+
+        Buffer target = regs.get(name);
+        if (target == null) {
+            throw new RuntimeException("Register not found: " + name);
+        }
+
+        if (target.getSize() != value.getSize()) {
+            throw new RuntimeException("Register size mismatch for " + name);
+        }
+
+        regs.put(name, new Buffer(value)); // store copy
     }
 
-    public void transfer(String src, int srcStart,String dest, int destStart,int length) {
+    public void transfer(String from, String to, int fromIdx, int toIdx, int length) {
+        Buffer src = regs.get(from);
+        Buffer dst = regs.get(to);
 
-        if (!registers.containsKey(src) || !registers.containsKey(dest)) {
-            System.out.println("Invalid register name");
-            return;
+        if (src == null || dst == null) {
+            throw new RuntimeException("Invalid register name");
         }
 
-        Buffer srcBuf = registers.get(src);
-        Buffer destBuf = registers.get(dest);
-
-        // bounds check
-        if (srcStart + length > srcBuf.getSize() ||
-            destStart + length > destBuf.getSize()) {
-            System.out.println("Out of bounds transfer");
-            return;
+        if (fromIdx < 0 || toIdx < 0 || length < 0 ||
+            fromIdx + length > src.getSize() ||
+            toIdx + length > dst.getSize()) {
+            throw new RuntimeException("Out of bounds transfer");
         }
 
-        // direct byte copy (efficient)
         for (int i = 0; i < length; i++) {
-            byte val = srcBuf.getByte(srcStart + i);
-            destBuf.setByte(val, destStart + i);
+            dst.setByte(src.getByte(fromIdx + i), toIdx + i);
         }
     }
 
-    //Manual management
-    public void setRegByte(String name, int index, byte value) {
-        if (!registers.containsKey(name)) return;
-        registers.get(name).setByte(value, index);
-    }
-
-    // Print all registers
     public void printRegisters() {
-        for (String name : registers.keySet()) {
-            System.out.print("Register: " + name + " -> ");
-            registers.get(name).print();
+        for (Map.Entry<String, Buffer> entry : regs.entrySet()) {
+            System.out.print("Register: " + entry.getKey() + " -> ");
+            entry.getValue().print();
         }
     }
-    public void appendToReg(String name, byte b) {
-        registers.get(name).append(b);
+    public void appendToReg(String name, byte value) {
+        Buffer b = regs.get(name);
+        if (b == null) {
+            throw new RuntimeException("Register not found: " + name);
+        }
+
+        Buffer copy = new Buffer(b);
+        copy.append(value);
+        regs.put(name, copy);
     }
 
     public void clearReg(String name) {
-        registers.get(name).clear();
+        Buffer b = regs.get(name);
+        if (b == null) {
+            throw new RuntimeException("Register not found: " + name);
+        }
+
+        regs.put(name, new Buffer(0));
     }
 }
