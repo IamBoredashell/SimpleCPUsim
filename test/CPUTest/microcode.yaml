@@ -1,6 +1,31 @@
-control_unit_size: 256
 microcode:
-  0x01:
-    - type: NOP
-  0x02:
-    - type: NOP
+
+  []:
+    - type: FetchNext
+      pc: PC
+      ir: IR
+
+  0x80:
+    - type: FetchNext
+      pc: PC
+      ir: IR
+
+  # INC A
+  [0x80, 0x50]:
+    - type: IncReg
+      reg: A
+    - type: ClearIR
+      ir: IR
+
+  # DEC A
+  [0x80, 0x51]:
+    - type: DecReg
+      reg: A
+    - type: ClearIR
+      ir: IR
+
+  # HALT (single byte)
+  0xFF:
+  - type: ClearIR
+    ir: IR
+  - type: End

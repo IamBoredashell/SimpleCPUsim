@@ -80,4 +80,11 @@ public class Registers {
             registers.get(name).print();
         }
     }
+    public void appendToReg(String name, byte b) {
+        registers.get(name).append(b);
+    }
+
+    public void clearReg(String name) {
+        registers.get(name).clear();
+    }
 }

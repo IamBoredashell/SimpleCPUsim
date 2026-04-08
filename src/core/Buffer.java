@@ -83,17 +83,33 @@ public class Buffer {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-
-        Buffer other = (Buffer) obj;
-        return Arrays.equals(this.data, other.data);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Buffer)) return false;
+        Buffer other = (Buffer) o;
+        return java.util.Arrays.equals(this.data, other.data);
     }
-
     @Override
     public int hashCode() {
-        return Arrays.hashCode(this.data);
+        return java.util.Arrays.hashCode(data);
+    }
+
+    public void append(byte b) {
+        byte[] newData = new byte[data.length + 1];
+        System.arraycopy(data, 0, newData, 0, data.length);
+        newData[data.length] = b;
+        data = newData;
+    }
+
+    public void clear() {
+        data = new byte[0];
+    }
+
+    public Buffer slice(int start) {
+        if (start >= data.length) return new Buffer(0);
+        byte[] newData = new byte[data.length - start];
+        System.arraycopy(data, start, newData, 0, newData.length);
+        return new Buffer(newData);
     }
 }
 

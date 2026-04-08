@@ -10,7 +10,7 @@ CP := $(OUT):src/libs/*
 # Only writing make runs the first one
 all:
 	mkdir -p $(OUT)
-	javac -cp $(CP) -d $(OUT) $(SRC)
+	javac -cp $(CP) -d $(OUT) $(SRC) -Xlint:unchecked
 
 run:
 	java -cp $(CP) Main

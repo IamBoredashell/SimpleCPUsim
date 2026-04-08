@@ -2,90 +2,71 @@ import java.util.*;
 
 enum CUState {
     FETCH,
-    DECODE,
     EXECUTE,
     HALT
 }
 
 public class ControlUnit {
-    private Map<List<Byte>, List<MicroOp>> microcodeMap = new HashMap<>();
-    private int size; // optional CU memory size
+
     private CUState state = CUState.FETCH;
-    private List<Byte> fetchBuffer = new ArrayList<>();
 
-    public ControlUnit(int size) {
-        this.size = size;
+    private Map<Buffer, List<MicroOp>> microcodeMap = new HashMap<>();
+
+    // 🔑 step execution state
+    private List<MicroOp> currentOps = null;
+    private int opIndex = 0;
+    private boolean instructionDone = false;
+
+    public CUState getState() { return state; }
+
+    public boolean isInstructionDone() { return instructionDone; }
+
+    public void resetInstruction() {
+        currentOps = null;
+        opIndex = 0;
+        instructionDone = false;
     }
 
-    /** Register an instruction sequence (arbitrary length) with micro-ops */
-    public void register(List<Byte> instructionSequence, List<MicroOp> ops) {
-        microcodeMap.put(instructionSequence, ops);
+    public void register(Buffer instruction, List<MicroOp> ops) {
+        if (instruction == null)
+            throw new RuntimeException("Instruction cannot be null");
+        microcodeMap.put(instruction, ops);
     }
 
-    /** Main dynamic dispatch executor */
-    public void execute(CPU cpu, String pcRegName) {
-        state = CUState.FETCH;
-        fetchBuffer.clear();
+    /** Execute ONE micro-op */
+    public void step(CPU cpu, String irRegName) {
 
-        while (true) {
-            state = CUState.FETCH;
-
-            // Read next byte from memory via user-specified register
-            Buffer pcBuf = cpu.reg.read(pcRegName); // e.g., "PC" or "MAR"
-            if (pcBuf.getSize() < 1) {
-                System.out.println("PC/MAR buffer too small");
-                state = CUState.HALT;
-                return;
-            }
-
-            byte nextByte = cpu.memory.read(pcBuf).getByte(0);
-            fetchBuffer.add(nextByte);
-
-            state = CUState.DECODE;
-
-            // Try to match fetchBuffer against any registered instruction
-            List<MicroOp> matchedOps = null;
-            boolean partialMatch = false;
-
-            for (List<Byte> key : microcodeMap.keySet()) {
-                if (fetchBuffer.equals(key)) {
-                    matchedOps = microcodeMap.get(key);
-                    break;
-                } else if (key.size() >= fetchBuffer.size()) {
-                    boolean prefixMatch = true;
-                    for (int i = 0; i < fetchBuffer.size(); i++) {
-                        if (!fetchBuffer.get(i).equals(key.get(i))) {
-                            prefixMatch = false;
-                            break;
-                        }
-                    }
-                    if (prefixMatch) partialMatch = true;
-                }
-            }
-
-            if (matchedOps != null) {
-                state = CUState.EXECUTE;
-                for (MicroOp op : matchedOps) {
-                    op.execute(cpu);
-                }
-                return; // Instruction executed, stop CU until next step
-            }
-
-            if (!partialMatch) {
-                state = CUState.HALT;
-                System.out.println("Invalid instruction sequence: " + fetchBuffer);
-                return;
-            }
-
-            // Else: partial match, fetch another byte in next iteration
+        if (!cpu.isRunning()) {
+            state = CUState.HALT;
+            return;
         }
-    }
 
-    public CUState getState() {
-        return state;
-    }
+        // 🔄 fetch new instruction if needed
+        if (currentOps == null) {
+            Buffer ir = cpu.reg.read(irRegName);
 
-    public int getSize() {
-        return size;
+            currentOps = microcodeMap.get(ir);
+
+            if (currentOps == null) {
+                state = CUState.HALT;
+                throw new RuntimeException("No microcode for IR");
+            }
+
+            opIndex = 0;
+            instructionDone = false;
+            state = CUState.FETCH;
+        }
+
+        state = CUState.EXECUTE;
+
+        // ▶ execute ONE micro-op
+        MicroOp op = currentOps.get(opIndex++);
+        op.execute(cpu);
+
+        // ✅ instruction finished
+        if (opIndex >= currentOps.size()) {
+            currentOps = null;
+            instructionDone = true;
+        }
     }
 }

@@ -1,5 +1,12 @@
 registers:
   - name: PC
     size: 1
+    init: [0x00]
+
+  - name: IR
+    size: 0
+    init: []
+
   - name: A
-    size: 1
+    size: 2
+    init: [0x00, 0x00]

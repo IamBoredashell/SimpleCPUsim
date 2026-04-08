@@ -1,117 +1,134 @@
-import java.util.List;
+import java.util.*;
 
 // Base interface
-interface MicroOp {
-    void execute(CPU cpu);
-}
+interface MicroOp { void execute(CPU cpu); }
 
-// No-op
+// --- No-op ---
 class NOP implements MicroOp {
-    @Override
+    public void execute(CPU cpu) { }
+}
+
+// --- Increment register ---
+class IncReg implements MicroOp {
+    private String reg;
+
+    public IncReg(String reg) {
+        this.reg = reg;
+    }
+
     public void execute(CPU cpu) {
-        // Do nothing
+        Buffer b = cpu.reg.read(reg);
+        int size = b.getSize();
+
+        Endianness e = cpu.getEndianness();
+
+        if (e == Endianness.LITTLE) {
+            for (int i = 0; i < size; i++) {
+                byte v = b.getByte(i);
+                v++;
+                b.setByte(v, i);
+                if (v != 0) break; // stop if no carry
+            }
+        } else {
+            for (int i = size - 1; i >= 0; i--) {
+                byte v = b.getByte(i);
+                v++;
+                b.setByte(v, i);
+                if (v != 0) break;
+            }
+        }
+
+        cpu.reg.write(reg, b);
+    }
+}
+// --- Decrement register ---
+class DecReg implements MicroOp {
+    private String reg;
+
+    public DecReg(String reg) {
+        this.reg = reg;
+    }
+
+    public void execute(CPU cpu) {
+        Buffer b = cpu.reg.read(reg);
+        int size = b.getSize();
+
+        Endianness e = cpu.getEndianness();
+
+        if (e == Endianness.LITTLE) {
+            for (int i = 0; i < size; i++) {
+                byte v = b.getByte(i);
+                v--;
+                b.setByte(v, i);
+                if (v != (byte)0xFF) break; // stop if no borrow
+            }
+        } else {
+            for (int i = size - 1; i >= 0; i--) {
+                byte v = b.getByte(i);
+                v--;
+                b.setByte(v, i);
+                if (v != (byte)0xFF) break;
+            }
+        }
+
+        cpu.reg.write(reg, b);
+    }
+}
+// --- Fetch next byte into IR ---
+class FetchNext implements MicroOp {
+    private String pcReg;
+    private String irReg;
+
+    public FetchNext(String pcReg, String irReg) {
+        this.pcReg = pcReg;
+        this.irReg = irReg;
+    }
+
+    public void execute(CPU cpu) {
+        Buffer pc = cpu.reg.read(pcReg);
+        byte b = cpu.memory.read(pc).getByte(0);
+
+        cpu.reg.appendToReg(irReg, b);
+
+        int val = pc.getByte(0) & 0xFF;
+        pc.setByte((byte)(val + 1), 0);
+        cpu.reg.write(pcReg, pc);
     }
 }
 
-// Load register from memory
-class LoadRegFromMem implements MicroOp {
-    private String destReg;       // destination register
-    private List<String> addrRegs; // optional registers to form address buffer
+// --- Shift IR left ---
+class ShiftIRLeft implements MicroOp {
+    private String irReg;
+    private int count;
 
-    public LoadRegFromMem(String destReg, List<String> addrRegs) {
-        this.destReg = destReg;
-        this.addrRegs = addrRegs;
+    public ShiftIRLeft(String irReg, int count) {
+        this.irReg = irReg;
+        this.count = count;
     }
 
-    @Override
     public void execute(CPU cpu) {
-        // Build address buffer from addrRegs
-        Buffer address;
-        if (addrRegs == null || addrRegs.isEmpty()) {
-            System.out.println("LoadRegFromMem: No address registers provided");
-            return;
-        } else if (addrRegs.size() == 1) {
-            address = cpu.reg.read(addrRegs.get(0));
-            if (address == null) return;
-        } else {
-            // concatenate multiple registers
-            int totalSize = 0;
-            for (String r : addrRegs) {
-                Buffer b = cpu.reg.read(r);
-                if (b == null) return;
-                totalSize += b.getSize();
-            }
-            byte[] addrData = new byte[totalSize];
-            int pos = 0;
-            for (String r : addrRegs) {
-                Buffer b = cpu.reg.read(r);
-                for (int i = 0; i < b.getSize(); i++) {
-                    addrData[pos++] = b.getByte(i);
-                }
-            }
-            address = new Buffer(addrData);
-        }
-
-        // Read memory
-        Buffer value = cpu.memory.read(address);
-        Buffer dest = cpu.reg.read(destReg);
-        if (dest == null) return;
-
-        // Ensure value fits destination register
-        if (value.getSize() != dest.getSize()) {
-            System.out.println("LoadRegFromMem: Size mismatch between memory and destination register");
-            return;
-        }
-
-        // Write value into destination register
-        cpu.reg.write(destReg, value);
+        Buffer ir = cpu.reg.read(irReg);
+        Buffer shifted = ir.slice(count);
+        cpu.reg.write(irReg, shifted);
     }
 }
 
-// Store register to memory
-class StoreRegToMem implements MicroOp {
-    private String srcReg;       // source register
-    private List<String> addrRegs; // optional registers to form address buffer
+// --- Clear IR ---
+class ClearIR implements MicroOp {
+    private String irReg;
 
-    public StoreRegToMem(String srcReg, List<String> addrRegs) {
-        this.srcReg = srcReg;
-        this.addrRegs = addrRegs;
+    public ClearIR(String irReg) {
+        this.irReg = irReg;
     }
 
-    @Override
     public void execute(CPU cpu) {
-        // Build address buffer from addrRegs
-        Buffer address;
-        if (addrRegs == null || addrRegs.isEmpty()) {
-            System.out.println("StoreRegToMem: No address registers provided");
-            return;
-        } else if (addrRegs.size() == 1) {
-            address = cpu.reg.read(addrRegs.get(0));
-            if (address == null) return;
-        } else {
-            // concatenate multiple registers
-            int totalSize = 0;
-            for (String r : addrRegs) {
-                Buffer b = cpu.reg.read(r);
-                if (b == null) return;
-                totalSize += b.getSize();
-            }
-            byte[] addrData = new byte[totalSize];
-            int pos = 0;
-            for (String r : addrRegs) {
-                Buffer b = cpu.reg.read(r);
-                for (int i = 0; i < b.getSize(); i++) {
-                    addrData[pos++] = b.getByte(i);
-                }
-            }
-            address = new Buffer(addrData);
-        }
+        cpu.reg.clearReg(irReg);
+    }
+}
 
-        // Read source register
-        Buffer src = cpu.reg.read(srcReg);
-        if (src == null) return;
-
-        // Write to memory
-        cpu.memory.write(address, src);
+// --- End instruction ---
+class End implements MicroOp {
+    public void execute(CPU cpu) {
+        cpu.stop();
     }
 }

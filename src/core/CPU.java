@@ -1,29 +1,38 @@
 import java.math.BigInteger;
 
+enum Endianness{
+    LITTLE,
+    BIG
+}
+
 public class CPU {
     public Registers reg;       // all CPU registers
     public Memory memory;       // memory
     public ControlUnit cu;      // microcode execution unit
-
+    public Endianness endianness;
     private BigInteger iteration;  // tracks number of micro-op executions
     private boolean running;       // CPU running status
 
-    public CPU(Memory memory, Registers reg, ControlUnit cu) {
+    public CPU(Memory memory, Registers reg, ControlUnit cu, Endianness endianness) {
         this.memory = memory;
         this.reg = reg;
         this.cu = cu;
         this.iteration = BigInteger.ZERO;
         this.running = false;
+        this.endianness = endianness;
     }
-
+    public void setEndianness(Endianness e) {
+        this.endianness = e;
+    }
     /** Step once: let CU dynamically fetch/decode/execute using specified PC/MAR register */
     public void step(String pcRegName) {
         if (!running) {
             System.out.println("CPU not running. Call start() first.");
             return;
         }
-
-        cu.execute(this, pcRegName);
+        while (isRunning()) {
+            cu.step(this, "IR");
+        }
         iteration = iteration.add(BigInteger.ONE);
     }
 
@@ -51,6 +60,9 @@ public class CPU {
         return iteration;
     }
 
+    public Endianness getEndianness(){
+        return endianness;
+    }
     /** Get CPU running state */
     public boolean isRunning() {
         return running;
