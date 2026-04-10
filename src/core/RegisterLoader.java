@@ -21,7 +21,6 @@ public class RegisterLoader {
                 throw new RuntimeException("Missing 'registers' section in YAML");
             }
 
-            // ✅ Safe cast
             Object regsObj = data.get("registers");
             if (!(regsObj instanceof List)) {
                 throw new RuntimeException("'registers' must be a list");

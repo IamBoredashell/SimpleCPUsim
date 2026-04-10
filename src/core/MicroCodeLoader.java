@@ -22,7 +22,6 @@ public class MicroCodeLoader {
                 throw new RuntimeException("Missing 'microcode' section in YAML");
             }
 
-            // ✅ Safe cast with check
             Object mcObj = data.get("microcode");
             if (!(mcObj instanceof Map)) {
                 throw new RuntimeException("'microcode' must be a map");
@@ -34,7 +33,6 @@ public class MicroCodeLoader {
 
                 Buffer instruction = parseInstruction(entry.getKey());
 
-                // ✅ Safe cast for micro-ops list
                 Object opsObj = entry.getValue();
                 if (!(opsObj instanceof List)) {
                     throw new RuntimeException("MicroOps must be a list");
