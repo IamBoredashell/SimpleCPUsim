@@ -117,4 +117,16 @@ public class Buffer {
         System.arraycopy(data, start, newData, 0, newData.length);
         return new Buffer(newData);
     }
+
+	public String toHexString() {
+	    StringBuilder sb = new StringBuilder();
+	    for (byte b : data) sb.append(String.format("%02X", b));
+	    return sb.toString() + "H";
+	}
+
+	public String toBinString() {
+	    StringBuilder sb = new StringBuilder();
+	    for (byte b : data) sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+	    return sb.toString() + "B";
+	}
 }

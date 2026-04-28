@@ -15,6 +15,8 @@ public class CPU {
     private BigInteger iteration;
     private boolean running;
 
+    private Runnable onStepComplete;
+
     public CPU(Memory memory, Registers reg, ControlUnit cu, Endianness endianness) {
         if (memory == null || reg == null || cu == null || endianness == null) {
             throw new IllegalArgumentException("CPU components cannot be null");
@@ -36,6 +38,10 @@ public class CPU {
         this.endianness = e;
     }
 
+    public void setOnStepComplete(Runnable onStepComplete){
+    	this.onStepComplete = onStepComplete;
+    }
+
     /** Execute ONE micro-op */
     public void step() {
         if (!running) {
@@ -44,6 +50,9 @@ public class CPU {
 
         cu.step(this, "IR");
         iteration = iteration.add(BigInteger.ONE);
+	
+	if (onStepComplete != null) {onStepComplete.run();}
+
     }
 
     /** Run continuously */
@@ -76,4 +85,13 @@ public class CPU {
     public Endianness getEndianness() {
         return endianness;
     }
+
+    public CPU copy() {
+        CPU clone = new CPU(this.memory.copy(), this.reg.copy(), this.cu.copy(), this.endianness);
+        clone.iteration = this.iteration;
+        clone.running = false; 
+        clone.setOnStepComplete(this.onStepComplete); // Keep UI connected
+        return clone;
+    }
+
 }

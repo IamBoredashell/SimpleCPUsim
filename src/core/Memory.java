@@ -42,6 +42,14 @@ public class Memory {
         return memory.containsKey(address);
     }
 
+    public Memory copy() {
+        Memory clone = new Memory();
+        for (Map.Entry<Buffer, Buffer> entry : this.memory.entrySet()) {
+            clone.write(entry.getKey(), entry.getValue());
+        }
+        return clone;
+    }
+
     public void clear() {
         memory.clear();
     }
@@ -54,4 +62,8 @@ public class Memory {
             entry.getValue().print();
         }
     }
+
+	public Map<Buffer, Buffer> getMemoryMap(){
+	    return memory;
+	}
 }
