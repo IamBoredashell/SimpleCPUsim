@@ -41,9 +41,7 @@ public class ControlUnit {
     /** Execute ONE micro-op */
     public void step(CPU cpu, String irRegName) {
 
-        if (cpu == null) {
-            throw new IllegalArgumentException("CPU cannot be null");
-        }
+        if (cpu == null) throw new IllegalArgumentException("CPU cannot be null");
 
         if (!cpu.isRunning()) {
             state = CUState.HALT;
@@ -53,15 +51,14 @@ public class ControlUnit {
         // Fetch instruction if needed
         if (currentOps == null) {
             Buffer ir = cpu.reg.read(irRegName);
-
-            if (ir == null) {
-                throw new RuntimeException("IR register is null");
-            }
+            if (ir == null) throw new RuntimeException("IR register is null");
 
             currentOps = microcodeMap.get(ir);
 
             if (currentOps == null) {
-                throw new RuntimeException("No microcode for IR (size=" + ir.getSize() + ")");
+                cpu.stop();
+                state = CUState.HALT;
+                throw new RuntimeException("CPU FAULT: No microcode for IR size " + ir.getSize());
             }
 
             opIndex = 0;
@@ -71,19 +68,44 @@ public class ControlUnit {
 
         state = CUState.EXECUTE;
 
-        MicroOp op = currentOps.get(opIndex++);
-        op.execute(cpu);
-
-        // check halt AFTER execution
-        if (!cpu.isRunning()) {
+        // --- EXCEPTION SAFETY NET ---
+        try {
+            MicroOp op = currentOps.get(opIndex++);
+            op.execute(cpu);
+        } catch (Exception e) {
+            // If hardware faults, safely halt and wipe pointers to prevent OutOfBounds spam
+            cpu.stop();
+            currentOps = null;
             state = CUState.HALT;
-            return;
+            throw new RuntimeException("CPU Hardware Fault: " + e.getMessage(), e);
         }
 
-        // instruction finished
+        // 1. Check if instruction finished FIRST, so pointers reset safely
         if (opIndex >= currentOps.size()) {
             currentOps = null;
             instructionDone = true;
         }
+
+        // 2. Check halt AFTER cleanup
+        if (!cpu.isRunning()) {
+            state = CUState.HALT;
+            return;
+        }
+    }
+    public ControlUnit copy() {
+        ControlUnit clone = new ControlUnit();
+        clone.state = this.state;
+        clone.microcodeMap = this.microcodeMap; // Shared instruction map is safe
+        clone.currentOps = this.currentOps;     // Reference to active micro-ops
+        clone.opIndex = this.opIndex;
+        clone.instructionDone = this.instructionDone;
+        return clone;
+    }
+
+    public MicroOp getCurrentOp() {
+    	if (currentOps != null && opIndex > 0 && opIndex <= currentOps.size()){
+	    return currentOps.get(opIndex-1);
+	}
+	return null;
     }
 }

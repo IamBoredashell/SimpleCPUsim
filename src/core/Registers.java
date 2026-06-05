@@ -83,6 +83,16 @@ public class Registers {
         regs.put(name, copy);
     }
 
+    public Registers copy() {
+        Registers clone = new Registers();
+        for (Map.Entry<String, Buffer> entry : this.regs.entrySet()) {
+            clone.addReg(entry.getKey(), entry.getValue().getSize());
+            clone.write(entry.getKey(), entry.getValue());
+        }
+        return clone;
+    }
+
+
     public void clearReg(String name) {
         Buffer b = regs.get(name);
         if (b == null) {
@@ -91,4 +101,9 @@ public class Registers {
 
         regs.put(name, new Buffer(0));
     }
+
+    public java.util.Set<String> getRegisterNames(){
+    	return regs.keySet();
+    }
+
 }

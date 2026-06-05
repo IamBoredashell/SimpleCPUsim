@@ -5,15 +5,20 @@ OUT := target
 TEST := $(shell find test -name "*.java")
 #classpath (Java)
 CP := $(OUT):src/libs/*
+JFX_PATH := /usr/share/openjfx/lib
+JFX_MODULES := javafx.controls,javafx.fxml,javafx.graphics
+
 #Make sure that make does not this these are files and are commands instead
-.PHONY: all run clean
+.PHONY: all run run-ui test clean
 # Only writing make runs the first one
 all:
 	mkdir -p $(OUT)
-	javac -cp $(CP) -d $(OUT) $(SRC) -Xlint:unchecked
+	javac --module-path $(JFX_PATH) --add-modules $(JFX_MODULES) -cp $(CP) -d $(OUT) $(SRC) -Xlint:unchecked
 
-run:
-	java -cp $(CP) Main
+run: all
+	java --module-path $(JFX_PATH) --add-modules $(JFX_MODULES) -cp $(CP) Main
+run-ui: all
+	java --module-path $(JFX_PATH) --add-modules $(JFX_MODULES) -cp $(CP) CpuSimulatorUI
 
 clean:
 	rm -rf $(OUT)
@@ -26,21 +31,12 @@ clean:
 test: all
 	@echo "Compiling test classes..."
 	# javac -cp $(OUT) -d $(OUT) $(TEST)
-	javac -cp $(CP) -d $(OUT) $(TEST)
+	javac --module-path $(JFX_PATH) --add-modules $(JFX_MODULES) -cp $(CP) -d $(OUT) $(TEST)	
 	@echo "Running all test classes..."
-	@for cls in BufferTest MemoryTest YamlTest RegistersTest MicroOpTest ControlUnitTest CPUTest; do \
+	@for cls in BufferTest MemoryTest YamlTest RegistersTest MicroOpTest ControlUnitTest CPUTest CPUTestGUI; do \
 		echo "Running $$cls..."; \
-		java -cp $(CP) $$cls; \
+		java --module-path $(JFX_PATH) --add-modules $(JFX_MODULES) -cp $(CP) $$cls || exit 1; \
 	done
 
 
 
-# Run a single test class (user specifies CLASS)
-# testi: all
-# 	@echo "Compiling test classes..."
-# 	javac -cp $(OUT) -d $(OUT) $(TEST)
-# 	@if [ -z "$(CLASS)" ]; then \
-# 		echo "Error: specify CLASS variable, e.g. make testi CLASS=BufferTest"; \
-# 		exit 1; \
-# 	fi
-# 	java -cp $(CP) $(CLASS)
