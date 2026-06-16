@@ -99,3 +99,8 @@ task(runCPUGUITest, dependsOn: 'classes', type: JavaExec) {
     mainClass = 'sim.CPUGUITest'
     classpath = sourceSets.test.runtimeClasspath
 }
+
+task(runFlagTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.FlagTest'
+    classpath = sourceSets.test.runtimeClasspath
+}

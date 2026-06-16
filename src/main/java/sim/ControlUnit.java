@@ -28,6 +28,12 @@ public class ControlUnit {
         instructionDone = false;
     }
 
+    void injectOps(List<MicroOp> ops) {
+        if (currentOps != null) {
+            currentOps.addAll(opIndex, ops);
+        }
+    }
+
     public void register(Buffer instruction, List<MicroOp> ops) {
         if (instruction == null) {
             throw new IllegalArgumentException("Instruction cannot be null");
@@ -53,14 +59,15 @@ public class ControlUnit {
             Buffer ir = cpu.reg.read(irRegName);
             if (ir == null) throw new RuntimeException("IR register is null");
 
-            currentOps = microcodeMap.get(ir);
+            List<MicroOp> base = microcodeMap.get(ir);
 
-            if (currentOps == null) {
+            if (base == null) {
                 cpu.stop();
                 state = CUState.HALT;
                 throw new RuntimeException("CPU FAULT: No microcode for IR size " + ir.getSize());
             }
 
+            currentOps = new ArrayList<>(base);
             opIndex = 0;
             instructionDone = false;
             state = CUState.FETCH;

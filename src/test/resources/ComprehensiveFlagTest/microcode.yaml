@@ -1,0 +1,142 @@
+microcode:
+  []:
+    - type: FetchNext
+      pc: PC
+      ir: IR
+
+  # 0x10: EvalFlag BIT0_A — A(0)=1 → inc B (true), dec B (false)
+  0x10:
+    - type: EvalFlag
+      name: BIT0_A
+      onTrue:
+        - type: IncReg
+          reg: B
+      onFalse:
+        - type: DecReg
+          reg: B
+    - type: ClearIR
+      ir: IR
+
+  # 0x11: EvalFlag BIT1_A
+  0x11:
+    - type: EvalFlag
+      name: BIT1_A
+      onTrue:
+        - type: IncReg
+          reg: B
+      onFalse:
+        - type: DecReg
+          reg: B
+    - type: ClearIR
+      ir: IR
+
+  # 0x12: EvalFlag BIT2_A
+  0x12:
+    - type: EvalFlag
+      name: BIT2_A
+      onTrue:
+        - type: IncReg
+          reg: B
+      onFalse:
+        - type: DecReg
+          reg: B
+    - type: ClearIR
+      ir: IR
+
+  # 0x13: EvalFlag EVEN_A — A(0)==0 → inc X (true), dec X (false)
+  0x13:
+    - type: EvalFlag
+      name: EVEN_A
+      onTrue:
+        - type: IncReg
+          reg: X
+      onFalse:
+        - type: DecReg
+          reg: X
+    - type: ClearIR
+      ir: IR
+
+  # 0x14: EvalFlag PREV_BIT0
+  0x14:
+    - type: EvalFlag
+      name: PREV_BIT0
+      onTrue:
+        - type: IncReg
+          reg: B
+      onFalse:
+        - type: DecReg
+          reg: B
+    - type: ClearIR
+      ir: IR
+
+  # 0x15: EvalFlag B_NOTZERO
+  0x15:
+    - type: EvalFlag
+      name: B_NOTZERO
+      onTrue:
+        - type: IncReg
+          reg: X
+      onFalse:
+        - type: DecReg
+          reg: X
+    - type: ClearIR
+      ir: IR
+
+  # 0x16: EvalFlag NOT_ZERO — all 16 bits of A are 0?
+  0x16:
+    - type: EvalFlag
+      name: NOT_ZERO
+      onTrue:
+        - type: IncReg
+          reg: X
+      onFalse:
+        - type: IncReg
+          reg: X
+    - type: ClearIR
+      ir: IR
+
+  # 0x17: EvalFlag PREV_PREV — did A(0) change?
+  0x17:
+    - type: EvalFlag
+      name: PREV_PREV
+      onTrue:
+        - type: IncReg
+          reg: X
+      onFalse:
+        - type: DecReg
+          reg: X
+    - type: ClearIR
+      ir: IR
+
+  # 0x18: EvalFlag A_EQ_B
+  0x18:
+    - type: EvalFlag
+      name: A_EQ_B
+      onTrue:
+        - type: IncReg
+          reg: X
+      onFalse:
+        - type: DecReg
+          reg: X
+    - type: ClearIR
+      ir: IR
+
+  # 0x19: EvalFlag ALWAYS
+  0x19:
+    - type: EvalFlag
+      name: ALWAYS
+    - type: ClearIR
+      ir: IR
+
+  # 0x1A: EvalFlag NEVER
+  0x1A:
+    - type: EvalFlag
+      name: NEVER
+    - type: ClearIR
+      ir: IR
+
+  # HALT
+  0xFF:
+    - type: ClearIR
+      ir: IR
+    - type: End

@@ -1,5 +1,7 @@
 package sim;
 
+import java.util.*;
+
 public abstract class MicroOp {
     public abstract void execute(CPU cpu);
 }
@@ -182,5 +184,29 @@ class XorReg extends MicroOp {
         }
 
         cpu.reg.write(r1, a);
+    }
+}
+
+class EvalFlag extends MicroOp {
+    private String name;
+    private List<MicroOp> onTrue;
+    private List<MicroOp> onFalse;
+
+    public EvalFlag(String name, List<MicroOp> onTrue, List<MicroOp> onFalse) {
+        if (name == null) throw new IllegalArgumentException("Flag name null");
+        this.name = name;
+        this.onTrue = onTrue != null ? onTrue : Collections.emptyList();
+        this.onFalse = onFalse != null ? onFalse : Collections.emptyList();
+    }
+
+    public void execute(CPU cpu) {
+        if (!cpu.flags.containsKey(name)) {
+            throw new RuntimeException("Flag not found: " + name);
+        }
+        boolean result = cpu.evalAndWriteFlag(name);
+        List<MicroOp> branch = result ? onTrue : onFalse;
+        if (!branch.isEmpty()) {
+            cpu.cu.injectOps(branch);
+        }
     }
 }

@@ -48,53 +48,12 @@ public class MicroCodeLoader {
                 List<MicroOp> microOps = new ArrayList<>();
 
                 for (Object obj : rawOps) {
-
                     if (!(obj instanceof Map)) {
                         throw new RuntimeException("Invalid micro-op entry format");
                     }
-
                     @SuppressWarnings("unchecked")
                     Map<String, Object> opMap = (Map<String, Object>) obj;
-
-                    String type = (String) opMap.get("type");
-                    if (type == null) {
-                        throw new RuntimeException("MicroOp missing 'type'");
-                    }
-
-                    switch (type) {
-
-                        case "FetchNext":
-                            microOps.add(new FetchNext(
-                                    (String) opMap.get("pc"),
-                                    (String) opMap.get("ir")
-                            ));
-                            break;
-
-                        case "IncReg":
-                            microOps.add(new IncReg(
-                                    (String) opMap.get("reg")
-                            ));
-                            break;
-
-                        case "DecReg":
-                            microOps.add(new DecReg(
-                                    (String) opMap.get("reg")
-                            ));
-                            break;
-
-                        case "ClearIR":
-                            microOps.add(new ClearIR(
-                                    (String) opMap.get("ir")
-                            ));
-                            break;
-
-                        case "End":
-                            microOps.add(new End());
-                            break;
-
-                        default:
-                            throw new RuntimeException("Unknown MicroOp: " + type);
-                    }
+                    microOps.add(parseSingleOp(opMap));
                 }
 
                 cu.register(instruction, microOps);
@@ -102,6 +61,65 @@ public class MicroCodeLoader {
 
         } catch (Exception e) {
             throw new RuntimeException("Microcode load failed", e);
+        }
+    }
+
+    private static EvalFlag parseEvalFlag(Map<String, Object> opMap) {
+        String name = (String) opMap.get("name");
+        List<MicroOp> onTrue = null;
+        List<MicroOp> onFalse = null;
+
+        if (opMap.containsKey("onTrue")) {
+            onTrue = parseOpsList(opMap.get("onTrue"));
+        }
+        if (opMap.containsKey("onFalse")) {
+            onFalse = parseOpsList(opMap.get("onFalse"));
+        }
+
+        return new EvalFlag(name, onTrue, onFalse);
+    }
+
+    private static List<MicroOp> parseOpsList(Object raw) {
+        List<MicroOp> ops = new ArrayList<>();
+        if (!(raw instanceof List)) {
+            throw new RuntimeException("Micro-op branch must be a list");
+        }
+        for (Object obj : (List<?>) raw) {
+            if (!(obj instanceof Map)) {
+                throw new RuntimeException("Invalid micro-op entry in branch");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> opMap = (Map<String, Object>) obj;
+            ops.add(parseSingleOp(opMap));
+        }
+        return ops;
+    }
+
+    private static MicroOp parseSingleOp(Map<String, Object> opMap) {
+        String type = (String) opMap.get("type");
+        if (type == null) throw new RuntimeException("MicroOp missing 'type'");
+
+        switch (type) {
+            case "FetchNext":
+                return new FetchNext((String) opMap.get("pc"), (String) opMap.get("ir"));
+            case "IncReg":
+                return new IncReg((String) opMap.get("reg"));
+            case "DecReg":
+                return new DecReg((String) opMap.get("reg"));
+            case "ClearIR":
+                return new ClearIR((String) opMap.get("ir"));
+            case "End":
+                return new End();
+            case "AndReg":
+                return new AndReg((String) opMap.get("r1"), (String) opMap.get("r2"));
+            case "OrReg":
+                return new OrReg((String) opMap.get("r1"), (String) opMap.get("r2"));
+            case "XorReg":
+                return new XorReg((String) opMap.get("r1"), (String) opMap.get("r2"));
+            case "EvalFlag":
+                return parseEvalFlag(opMap);
+            default:
+                throw new RuntimeException("Unknown MicroOp: " + type);
         }
     }
 

@@ -1,0 +1,12 @@
+flags:
+  - name: ZERO
+    condition: A(1)
+    target: FLAGS(0)
+
+  - name: CARRY
+    condition: A(2)
+    target: FLAGS(1)
+
+  - name: PREVCHECK
+    condition: prev.A(0)
+    target: FLAGS(2)

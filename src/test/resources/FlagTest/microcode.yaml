@@ -1,0 +1,24 @@
+microcode:
+  []:
+    - type: FetchNext
+      pc: PC
+      ir: IR
+
+  # Eval ZERO flag (A(1)), if true: IncReg PC (skip 1 byte), if false: DecReg A
+  0x01:
+    - type: EvalFlag
+      name: ZERO
+      onTrue:
+        - type: IncReg
+          reg: PC
+      onFalse:
+        - type: DecReg
+          reg: A
+    - type: ClearIR
+      ir: IR
+
+  # HALT
+  0xFF:
+    - type: ClearIR
+      ir: IR
+    - type: End
