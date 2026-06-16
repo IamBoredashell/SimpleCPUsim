@@ -26,11 +26,11 @@ public class CPUTest {
         printHeader("CPU YAML FULL SYSTEM TEST");
 
         Registers regs = new Registers();
-        RegisterLoader.loadRegistersFromYaml("test/CPUTest/registers.yaml", regs);
+        RegisterLoader.loadRegistersFromYaml("src/test/resources/CPUTest/registers.yaml", regs);
 
         Memory mem = new Memory();
         ControlUnit cu = new ControlUnit();
-        MicroCodeLoader.load("test/CPUTest/microcode.yaml", cu);
+        MicroCodeLoader.load("src/test/resources/CPUTest/microcode.yaml", cu);
 
         System.out.println("\nLoaded Registers:");
         regs.printRegisters();

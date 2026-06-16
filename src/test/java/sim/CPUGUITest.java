@@ -10,11 +10,11 @@ public class CPUGUITest {
         System.out.println("==============================");
 
         Registers regs = new Registers();
-        RegisterLoader.loadRegistersFromYaml("test/CPUTest/registers.yaml", regs);
+        RegisterLoader.loadRegistersFromYaml("src/test/resources/CPUTest/registers.yaml", regs);
 
         Memory mem = new Memory();
         ControlUnit cu = new ControlUnit();
-        MicroCodeLoader.load("test/CPUTest/microcode.yaml", cu);
+        MicroCodeLoader.load("src/test/resources/CPUTest/microcode.yaml", cu);
 
         mem.write(new Buffer(new byte[]{0x00}), new Buffer(new byte[]{(byte)0x80}));
         mem.write(new Buffer(new byte[]{0x01}), new Buffer(new byte[]{0x50}));
