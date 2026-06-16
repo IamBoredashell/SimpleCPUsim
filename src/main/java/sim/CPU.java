@@ -1,3 +1,5 @@
+package sim;
+
 import java.math.BigInteger;
 
 enum Endianness {
@@ -42,7 +44,6 @@ public class CPU {
     	this.onStepComplete = onStepComplete;
     }
 
-    /** Execute ONE micro-op */
     public void step() {
         if (!running) {
             return;
@@ -52,10 +53,8 @@ public class CPU {
         iteration = iteration.add(BigInteger.ONE);
 	
 	if (onStepComplete != null) {onStepComplete.run();}
-
     }
 
-    /** Run continuously */
     public void run() {
         start();
 
@@ -64,12 +63,10 @@ public class CPU {
         }
     }
 
-    /** Start CPU (no execution loop inside) */
     public void start() {
         running = true;
     }
 
-    /** Stop CPU */
     public void stop() {
         running = false;
     }
@@ -90,8 +87,7 @@ public class CPU {
         CPU clone = new CPU(this.memory.copy(), this.reg.copy(), this.cu.copy(), this.endianness);
         clone.iteration = this.iteration;
         clone.running = false; 
-        clone.setOnStepComplete(this.onStepComplete); // Keep UI connected
+        clone.setOnStepComplete(this.onStepComplete);
         return clone;
     }
-
 }

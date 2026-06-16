@@ -1,3 +1,5 @@
+package sim;
+
 import org.yaml.snakeyaml.Yaml;
 import java.util.Map;
 

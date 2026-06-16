@@ -1,9 +1,10 @@
+package sim;
+
 import java.util.Arrays;
 
 public class Buffer {
     private byte[] data;
 
-    // Constructor that creates a buffer of the specified size
     public Buffer(int size) {
         if (size < 0) {
             throw new IllegalArgumentException("Buffer size cannot be negative");
@@ -11,7 +12,6 @@ public class Buffer {
         this.data = new byte[size];
     }
 
-    // Copy Constructor
     public Buffer(Buffer other) {
         if (other == null) {
             throw new IllegalArgumentException("Cannot copy null Buffer");
@@ -19,7 +19,6 @@ public class Buffer {
         this.data = other.data.clone();
     }
 
-    // Constructor that initializes the buffer with a given byte array
     public Buffer(byte[] data) {
         if (data == null) {
             throw new IllegalArgumentException("Data cannot be null");
@@ -27,12 +26,10 @@ public class Buffer {
         this.data = data.clone();
     }
 
-    // Get the data array
     public byte[] getData() {
         return this.data.clone();
     }
 
-    // Set the data array
     public void setData(byte[] data) {
         if (data == null) {
             throw new IllegalArgumentException("Data cannot be null");
@@ -57,12 +54,10 @@ public class Buffer {
         return data[index];
     }
 
-    // Set all bytes to zero
     public void setZero() {
         Arrays.fill(data, (byte) 0);
     }
 
-    // Check if buffer is zero
     public boolean isZero() {
         for (byte b : data) {
             if (b != 0) return false;
@@ -70,12 +65,10 @@ public class Buffer {
         return true;
     }
 
-    // Get the size of the buffer
     public int getSize() {
         return this.data.length;
     }
 
-    // Print the buffer's content in hexadecimal format
     public void print() {
         for (byte b : data) {
             System.out.printf("%02X ", b);

@@ -1,3 +1,5 @@
+package sim;
+
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
@@ -109,7 +111,6 @@ public class MicroCodeLoader {
             throw new RuntimeException("Instruction key cannot be null");
         }
 
-        // List case: [0x80, 0x50]
         if (key instanceof List) {
             List<?> list = (List<?>) key;
 
@@ -122,7 +123,6 @@ public class MicroCodeLoader {
             return new Buffer(data);
         }
 
-        // Single byte case: 0x80
         return new Buffer(new byte[]{parseByte(key)});
     }
 

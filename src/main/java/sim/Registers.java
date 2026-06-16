@@ -1,3 +1,5 @@
+package sim;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +29,7 @@ public class Registers {
         if (b == null) {
             throw new RuntimeException("Register not found: " + name);
         }
-        return new Buffer(b); // return copy
+        return new Buffer(b);
     }
 
     public void write(String name, Buffer value) {
@@ -44,7 +46,7 @@ public class Registers {
             throw new RuntimeException("Register size mismatch for " + name);
         }
 
-        regs.put(name, new Buffer(value)); // store copy
+        regs.put(name, new Buffer(value));
     }
 
     public void transfer(String from, String to, int fromIdx, int toIdx, int length) {
@@ -72,6 +74,7 @@ public class Registers {
             entry.getValue().print();
         }
     }
+
     public void appendToReg(String name, byte value) {
         Buffer b = regs.get(name);
         if (b == null) {
@@ -92,7 +95,6 @@ public class Registers {
         return clone;
     }
 
-
     public void clearReg(String name) {
         Buffer b = regs.get(name);
         if (b == null) {
@@ -105,5 +107,4 @@ public class Registers {
     public java.util.Set<String> getRegisterNames(){
     	return regs.keySet();
     }
-
 }

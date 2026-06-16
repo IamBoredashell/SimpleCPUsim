@@ -1,3 +1,5 @@
+package sim;
+
 import java.util.*;
 
 public class CPUTest {
@@ -23,23 +25,15 @@ public class CPUTest {
 
         printHeader("CPU YAML FULL SYSTEM TEST");
 
-        /* =========================
-           LOAD FROM YAML
-        ========================= */
-
         Registers regs = new Registers();
-        RegisterLoader.loadRegistersFromYaml("test/CPUTest/registers.yaml", regs);
+        RegisterLoader.loadRegistersFromYaml("src/test/resources/CPUTest/registers.yaml", regs);
 
         Memory mem = new Memory();
         ControlUnit cu = new ControlUnit();
-        MicroCodeLoader.load("test/CPUTest/microcode.yaml", cu);
+        MicroCodeLoader.load("src/test/resources/CPUTest/microcode.yaml", cu);
 
         System.out.println("\nLoaded Registers:");
         regs.printRegisters();
-
-        /* =========================
-           PROGRAM (MEMORY)
-        ========================= */
 
         /*
            Program:
@@ -66,10 +60,6 @@ public class CPUTest {
 
         System.out.println("\nProgram loaded into memory.");
 
-        /* =========================
-           CPU RUN
-        ========================= */
-
         CPU cpu = new CPU(mem, regs, cu, Endianness.LITTLE);
 
         cpu.start();
@@ -85,16 +75,11 @@ public class CPUTest {
 
             step++;
 
-            // safety break
             if (step > 100) {
                 System.out.println("Safety break (possible infinite loop)");
                 break;
             }
         }
-
-        /* =========================
-           FINAL STATE
-        ========================= */
 
         printHeader("FINAL STATE");
 

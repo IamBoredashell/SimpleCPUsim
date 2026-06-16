@@ -1,3 +1,5 @@
+package sim;
+
 public class RegistersTest {
     public static void main(String[] args) {
         System.out.println("=== RegistersTest ===");

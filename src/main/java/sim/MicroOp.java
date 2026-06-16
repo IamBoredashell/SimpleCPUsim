@@ -1,10 +1,8 @@
+package sim;
+
 public abstract class MicroOp {
     public abstract void execute(CPU cpu);
 }
-
-/* =========================
-   FETCH
-========================= */
 
 class FetchNext extends MicroOp {
     private String pcReg;
@@ -41,10 +39,6 @@ class FetchNext extends MicroOp {
     }
 }
 
-/* =========================
-   CONTROL
-========================= */
-
 class ClearIR extends MicroOp {
     private String ir;
 
@@ -63,10 +57,6 @@ class End extends MicroOp {
         cpu.stop();
     }
 }
-
-/* =========================
-   ARITHMETIC
-========================= */
 
 class IncReg extends MicroOp {
     private String reg;
@@ -113,10 +103,6 @@ class DecReg extends MicroOp {
         }
     }
 }
-
-/* =========================
-   LOGIC OPERATIONS
-========================= */
 
 class AndReg extends MicroOp {
     private String r1, r2;

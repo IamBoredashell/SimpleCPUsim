@@ -1,3 +1,5 @@
+package sim;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +18,6 @@ public class Memory {
             throw new IllegalArgumentException("Data cannot be null");
         }
 
-        // store copies to avoid external mutation
         memory.put(new Buffer(address), new Buffer(data));
     }
 
@@ -31,7 +32,6 @@ public class Memory {
             throw new RuntimeException("Memory read error: no data at given address");
         }
 
-        // return copy to avoid mutation outside
         return new Buffer(data);
     }
 
