@@ -1,3 +1,5 @@
+package sim;
+
 import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -55,7 +57,6 @@ public class RegisterLoader {
 
                 registers.addReg(name, size);
 
-                // Optional init
                 if (reg.containsKey("init")) {
                     Object initObj = reg.get("init");
 

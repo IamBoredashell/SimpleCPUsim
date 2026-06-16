@@ -19,6 +19,9 @@
 *.tar.gz
 *.rar
 
+# But keep the Gradle wrapper jar (needed for self-bootstrapping)
+!gradle/wrapper/gradle-wrapper.jar
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
@@ -38,3 +41,8 @@ Thumbs.db
 
 #My notes
 notes
+
+# Gradle
+.gradle/
+build/
+

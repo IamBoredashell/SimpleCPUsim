@@ -1,3 +1,5 @@
+package sim;
+
 import java.util.*;
 
 enum CUState {
@@ -12,7 +14,6 @@ public class ControlUnit {
 
     private Map<Buffer, List<MicroOp>> microcodeMap = new HashMap<>();
 
-    // step execution state
     private List<MicroOp> currentOps = null;
     private int opIndex = 0;
     private boolean instructionDone = false;
@@ -48,7 +49,6 @@ public class ControlUnit {
             return;
         }
 
-        // Fetch instruction if needed
         if (currentOps == null) {
             Buffer ir = cpu.reg.read(irRegName);
             if (ir == null) throw new RuntimeException("IR register is null");
@@ -68,35 +68,32 @@ public class ControlUnit {
 
         state = CUState.EXECUTE;
 
-        // --- EXCEPTION SAFETY NET ---
         try {
             MicroOp op = currentOps.get(opIndex++);
             op.execute(cpu);
         } catch (Exception e) {
-            // If hardware faults, safely halt and wipe pointers to prevent OutOfBounds spam
             cpu.stop();
             currentOps = null;
             state = CUState.HALT;
             throw new RuntimeException("CPU Hardware Fault: " + e.getMessage(), e);
         }
 
-        // 1. Check if instruction finished FIRST, so pointers reset safely
         if (opIndex >= currentOps.size()) {
             currentOps = null;
             instructionDone = true;
         }
 
-        // 2. Check halt AFTER cleanup
         if (!cpu.isRunning()) {
             state = CUState.HALT;
             return;
         }
     }
+
     public ControlUnit copy() {
         ControlUnit clone = new ControlUnit();
         clone.state = this.state;
-        clone.microcodeMap = this.microcodeMap; // Shared instruction map is safe
-        clone.currentOps = this.currentOps;     // Reference to active micro-ops
+        clone.microcodeMap = this.microcodeMap;
+        clone.currentOps = this.currentOps;
         clone.opIndex = this.opIndex;
         clone.instructionDone = this.instructionDone;
         return clone;

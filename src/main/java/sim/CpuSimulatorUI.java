@@ -1,3 +1,5 @@
+package sim;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.animation.FadeTransition;
@@ -23,28 +25,21 @@ import java.util.Stack;
 
 public class CpuSimulatorUI extends Application {
 
-
-    /* colors yay :) */
     private static final String BG_COLOR = "#0a0e17";
     private static final String PANEL_BG = "#111827";
     private static final String BORDER_COLOR = "#1f2937";
     private static final String TEXT_CYAN = "#22d3ee";
     private static final String TEXT_GREEN = "#4ade80";
     
-    // Incase of stepbacks.	
     public static CPU injectedCpu = null;
     private CPU cpu;
     private Registers registers;
     private Memory memory;
     private ControlUnit cu;
 
-    // for rollbacks
     private Stack<CPU> history = new Stack<>();
     private CPU initialState; 
 
-
-
-   // Gui panels.
     private ListView<String> memoryView;
     private Label pcValueLbl, irValueLbl, stateValueLbl;
     private Label fetchPill, execPill, haltPill;
@@ -52,7 +47,6 @@ public class CpuSimulatorUI extends Application {
     private VBox rightRegistersBox;
     private Map<String, Label> activeRegisterLabels = new HashMap<>();
     private Timeline clock;
-    // for changing type of numbers.
     private int displayMode = 0; 
 
     private Button playBtn, pauseBtn, hexBtn, decBtn, binBtn;
@@ -110,12 +104,6 @@ public class CpuSimulatorUI extends Application {
         initialState = cpu.copy();
     }
 
-    /*
-     *   ------------------
-     *   MAIN DISPLAY PANELS
-     *   ------------------
-     */
-
     private VBox createLeftPanel() {
         VBox panel = createBasePanel("PROGRAM MEMORY");
         
@@ -128,7 +116,6 @@ public class CpuSimulatorUI extends Application {
         );
         VBox.setVgrow(memoryView, Priority.ALWAYS);
         
-  
         memoryView.setCellFactory(lv -> new ListCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -137,9 +124,8 @@ public class CpuSimulatorUI extends Application {
                     setText(null);
                     setStyle("-fx-background-color: transparent;");
                 } else {
-                    if (item.startsWith("▶")) {
+                    if (item.startsWith("\u25B6")) {
                         setText(item.substring(1)); 
-                        // Q_Q
                         setStyle("-fx-background-color: #1e3a8a; -fx-text-fill: #38bdf8; -fx-font-weight: bold; -fx-border-color: #38bdf8; -fx-border-width: 0 0 0 4; -fx-padding: 4 5 4 10;");
                     } else {
                         setText(item);
@@ -164,7 +150,7 @@ public class CpuSimulatorUI extends Application {
         fetchPill = createStyledLabel("FETCH", "#374151", true);
         execPill = createStyledLabel("EXECUTE", "#374151", true);
         haltPill = createStyledLabel("HALT", "#374151", true);
-        stateBox.getChildren().addAll(fetchPill, new Label("→"), execPill, new Label("→"), haltPill);
+        stateBox.getChildren().addAll(fetchPill, new Label("\u2192"), execPill, new Label("\u2192"), haltPill);
 
         GridPane cpuGrid = new GridPane();
         cpuGrid.setHgap(40);
@@ -203,11 +189,11 @@ public class CpuSimulatorUI extends Application {
         bar.setStyle("-fx-background-color: #050810; -fx-border-color: " + BORDER_COLOR + "; -fx-border-width: 1 0 0 0;");
         bar.setAlignment(Pos.CENTER_LEFT);
 
-        Button resetBtn = createInteractiveButton("↺", "Reset System");
-        Button stepBackBtn = createInteractiveButton("⏮", "Step Backward");
-        playBtn = createInteractiveButton("▶", "Auto-Play");
-        pauseBtn = createInteractiveButton("⏸", "Pause");
-        Button stepFwdBtn = createInteractiveButton("⏭", "Step Forward");
+        Button resetBtn = createInteractiveButton("\u21BA", "Reset System");
+        Button stepBackBtn = createInteractiveButton("\u23EE", "Step Backward");
+        playBtn = createInteractiveButton("\u25B6", "Auto-Play");
+        pauseBtn = createInteractiveButton("\u23F8", "Pause");
+        Button stepFwdBtn = createInteractiveButton("\u23ED", "Step Forward");
 
         HBox speedControl = new HBox(10);
         speedControl.setAlignment(Pos.CENTER);
@@ -236,11 +222,6 @@ public class CpuSimulatorUI extends Application {
         bar.getChildren().addAll(resetBtn, stepBackBtn, playBtn, pauseBtn, stepFwdBtn, speedControl, spacer, baseSelector);
         
         setupExecutionLoop(speedSlider, msLabel);
-
-
-
-	// BUTTON WORKING
-
 
         resetBtn.setOnAction(e -> {
             cpu.stop(); clock.pause();
@@ -280,11 +261,6 @@ public class CpuSimulatorUI extends Application {
         return bar;
     }
 
-    /*
-     *---------------------------------
-     * EXECUTION LOOP AND VISUAL UPDATES
-     *---------------------------------
-     */
     private void setupExecutionLoop(Slider speedSlider, Label msLabel) {
         cpu.setOnStepComplete(() -> Platform.runLater(this::updateUI));
 
@@ -371,7 +347,7 @@ public class CpuSimulatorUI extends Application {
             String data = formatBuffer(memList.get(i).getValue());
             
             if (addr.equals(currentPcStr)) {
-                memoryView.getItems().add("▶" + addr + "   DATA: " + data);
+                memoryView.getItems().add("\u25B6" + addr + "   DATA: " + data);
                 activeIndex = i;
             } else {
                 memoryView.getItems().add(addr + "   DATA: " + data);
@@ -418,7 +394,6 @@ public class CpuSimulatorUI extends Application {
         }
     }
 
-   // FANCY BUTTON
     private Button createInteractiveButton(String text, String tooltipStr) {
         Button btn = new Button(text);
         btn.setCursor(Cursor.HAND);

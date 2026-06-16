@@ -1,0 +1,101 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.yaml:snakeyaml:2.3'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.graphics']
+}
+
+application {
+    mainClass = 'sim.CpuSimulatorUI'
+}
+
+tasks.register('runTest') {
+    description = 'Run all test classes'
+    group = 'verification'
+    dependsOn 'testClasses'
+    doLast {
+        def testClasses = sourceSets.test.allSource.matching {
+            include '**/*Test.java'
+        }.files.collect { file ->
+            def srcRoot = sourceSets.test.java.srcDirs.find { srcDir ->
+                file.toPath().startsWith(srcDir.toPath())
+            }
+            if (srcRoot != null) {
+                def rel = srcRoot.toPath().relativize(file.toPath())
+                return rel.toString().replace(File.separator, '.').replace('.java', '')
+            }
+            return null
+        }.findAll { it != null }.sort()
+
+        if (testClasses.isEmpty()) {
+            logger.warn 'No test classes found!'
+        } else {
+            logger.lifecycle "Test classes to run:\n${testClasses.collect { "  - $it" }.join('\n')}"
+            testClasses.each { cls ->
+                logger.lifecycle "--- Running $cls ---"
+                javaexec {
+                    classpath = sourceSets.test.runtimeClasspath
+                    mainClass = cls
+                }
+            }
+        }
+    }
+}
+
+task(runBufferTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.BufferTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runMemoryTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.MemoryTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runRegistersTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.RegistersTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runYamlTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.YamlTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runMicroOpTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.MicroOpTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runControlUnitTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.ControlUnitTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runCPUTest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.CPUTest'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+task(runCPUGUITest, dependsOn: 'classes', type: JavaExec) {
+    mainClass = 'sim.CPUGUITest'
+    classpath = sourceSets.test.runtimeClasspath
+}
