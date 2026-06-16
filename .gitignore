@@ -28,11 +28,16 @@ replay_pid*
 
 #build output
 target/
+bin/
 
 # IDEs
 .idea/
 .vscode/
 *.iml
+.eclipse/
+.classpath
+.project
+.settings/
 
 # OS junk
 .DS_Store
